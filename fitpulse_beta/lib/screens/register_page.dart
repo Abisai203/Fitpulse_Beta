@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'login_page.dart'; // Importa la pantalla de inicio de sesión
+import 'login_page.dart';
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -9,46 +9,80 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  String? _selectedType; // Tipo de usuario seleccionado
+  String? _selectedType;
   final TextEditingController _nombreController = TextEditingController();
-  final TextEditingController _apellidoController = TextEditingController();
+  final TextEditingController _apellidoPaternoController = TextEditingController();
+  final TextEditingController _apellidoMaternoController = TextEditingController();
   final TextEditingController _edadController = TextEditingController();
-  final TextEditingController _especialidadController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  String _sexo = 'Femenino';
+  final TextEditingController _telefonoController = TextEditingController();
+  final TextEditingController _descripcionController = TextEditingController();
+  String _sexo = 'Masculino';
   bool _isLoading = false;
+  int? _idDeporteSeleccionado;
+
+  List<Map<String, dynamic>> _deportes = [
+    {"id": 1, "nombre": "Fútbol"},
+    {"id": 2, "nombre": "Baloncesto"},
+    {"id": 3, "nombre": "Natación"},
+    {"id": 4, "nombre": "Tenis"},
+    {"id": 5, "nombre": "Atletismo"},
+    {"id": 6, "nombre": "Voleibol"},
+    {"id": 7, "nombre": "Ciclismo"},
+    {"id": 8, "nombre": "Boxeo"},
+    {"id": 9, "nombre": "Artes Marciales"},
+    {"id": 10, "nombre": "Béisbol"},
+  ];
 
   Future<void> registerUser() async {
     if (_selectedType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Por favor selecciona un tipo de usuario.")),
+        SnackBar(content: Text("Por favor selecciona el tipo de usuario.")),
+      );
+      return;
+    }
+
+    if (_selectedType == "Coach" && _idDeporteSeleccionado == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Por favor selecciona un deporte para entrenar.")),
       );
       return;
     }
 
     final String apiUrl = _selectedType == "Coach"
-        ? "https://fit-pulse-1w4q.onrender.com/coaches"
-        : "https://fit-pulse-1w4q.onrender.com/alumnos";
+        ? "https://beta-fit-pulse.onrender.com/entrenadores"
+        : "https://beta-fit-pulse.onrender.com/usuarios";
 
     setState(() {
       _isLoading = true;
     });
 
     try {
+      final Map<String, dynamic> requestBody = {
+        "nombre": _nombreController.text.trim(),
+        "apellido_paterno": _apellidoPaternoController.text.trim(),
+        "apellido_materno": _apellidoMaternoController.text.trim(),
+        "edad": int.tryParse(_edadController.text.trim()) ?? 0,
+        "correo_electronico": _emailController.text.trim(),
+        "contrasena": _passwordController.text.trim(),
+        "numero_telefonico": _telefonoController.text.trim(),
+        "sexo": _sexo,
+      };
+
+      if (_selectedType == "Coach") {
+        requestBody["id_deporte"] = _idDeporteSeleccionado!;
+        requestBody["descripcion"] = _descripcionController.text.trim();
+      } else {
+        requestBody["deporte_prioritario_id"] = _idDeporteSeleccionado ?? 0;
+      }
+
+      print("Enviando datos: ${json.encode(requestBody)}"); // Para depuración
+
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {"Content-Type": "application/json"},
-        body: json.encode({
-          "nombre": _nombreController.text.trim(),
-          "apellido": _apellidoController.text.trim(),
-          "edad": int.tryParse(_edadController.text.trim()) ?? 0,
-          if (_selectedType == "Coach")
-            "especialidad": _especialidadController.text.trim(),
-          "email": _emailController.text.trim(),
-          "contraseña": _passwordController.text.trim(),
-          "sexo": _sexo,
-        }),
+        body: json.encode(requestBody),
       );
 
       if (response.statusCode == 201) {
@@ -60,8 +94,11 @@ class _RegisterPageState extends State<RegisterPage> {
           MaterialPageRoute(builder: (context) => LoginPage()),
         );
       } else {
-        final errorMessage =
-            json.decode(response.body)['error'] ?? "Error desconocido";
+        final Map<String, dynamic> errorData = json.decode(response.body);
+        String errorMessage = errorData.containsKey('error')
+            ? errorData['error']
+            : "Error desconocido";
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
         );
@@ -77,82 +114,6 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
-  Widget _buildSelectionButtons() {
-    List<Map<String, dynamic>> options = [
-      {"label": "Entrenador", "icon": Icons.run_circle, "value": "Coach"},
-      {"label": "Alumno", "icon": Icons.person, "value": "Alumno"},
-      {
-        "label": "Entrenador\nY Alumno",
-        "icon": Icons.sports_gymnastics,
-        "value": "CoachAlumno"
-      }
-    ];
-
-    return Column(
-      children: [
-        Text(
-          "Bienvenido",
-          style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.green[900]),
-        ),
-        SizedBox(height: 20),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          childAspectRatio: 1.8,
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          children: options.map((option) {
-            bool isSelected = _selectedType == option['value'];
-            return GestureDetector(
-              onTap: () => setState(() => _selectedType = option['value']),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isSelected ? Colors.green[200] : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.green, width: 2),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(option['icon'],
-                        size: 40,
-                        color: isSelected ? Colors.white : Colors.green),
-                    SizedBox(height: 5),
-                    Text(option['label'],
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected ? Colors.white : Colors.green))
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-        SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: _selectedType == null
-              ? null
-              : () {},
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
-            padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          child: Text("Siguiente",
-              style: TextStyle(fontSize: 18, color: Colors.white)),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -161,64 +122,57 @@ class _RegisterPageState extends State<RegisterPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            if (_selectedType == null)
-              _buildSelectionButtons()
-            else ...[
-              Text(
-                "Registro como $_selectedType",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 20),
-              TextField(
-                controller: _nombreController,
-                decoration: InputDecoration(labelText: "Nombre"),
-              ),
-              TextField(
-                controller: _apellidoController,
-                decoration: InputDecoration(labelText: "Apellido"),
-              ),
-              TextField(
-                controller: _edadController,
-                decoration: InputDecoration(labelText: "Edad"),
-                keyboardType: TextInputType.number,
-              ),
-              if (_selectedType == "Coach" || _selectedType == "CoachAlumno")
-                TextField(
-                  controller: _especialidadController,
-                  decoration: InputDecoration(labelText: "Especialidad"),
-                ),
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(labelText: "Correo Electrónico"),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              TextField(
-                controller: _passwordController,
-                decoration: InputDecoration(labelText: "Contraseña"),
-                obscureText: true,
-              ),
-              DropdownButtonFormField(
-                value: _sexo,
-                items: ['Femenino', 'Masculino']
-                    .map((sexo) =>
-                        DropdownMenuItem(value: sexo, child: Text(sexo)))
-                    .toList(),
-                onChanged: (value) => setState(() => _sexo = value as String),
-                decoration: InputDecoration(labelText: "Sexo"),
-              ),
-              SizedBox(height: 20),
-              _isLoading
-                  ? CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: registerUser,
-                      child: Text("Registrar"),
-                    ),
-              SizedBox(height: 20),
-              TextButton(
-                onPressed: () => setState(() => _selectedType = null),
-                child: Text("Volver a selección"),
-              ),
-            ],
+            DropdownButtonFormField(
+              value: _selectedType,
+              items: [
+                DropdownMenuItem(value: "Coach", child: Text("Entrenador")),
+                DropdownMenuItem(value: "Alumno", child: Text("Alumno")),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedType = value as String?;
+                  _idDeporteSeleccionado = null; // Restablecer selección de deporte
+                });
+              },
+              decoration: InputDecoration(labelText: "Tipo de Usuario"),
+            ),
+            TextField(controller: _nombreController, decoration: InputDecoration(labelText: "Nombre")),
+            TextField(controller: _apellidoPaternoController, decoration: InputDecoration(labelText: "Apellido Paterno")),
+            TextField(controller: _apellidoMaternoController, decoration: InputDecoration(labelText: "Apellido Materno")),
+            TextField(controller: _edadController, decoration: InputDecoration(labelText: "Edad"), keyboardType: TextInputType.number),
+            TextField(controller: _telefonoController, decoration: InputDecoration(labelText: "Número Telefónico"), keyboardType: TextInputType.phone),
+            TextField(controller: _emailController, decoration: InputDecoration(labelText: "Correo Electrónico"), keyboardType: TextInputType.emailAddress),
+            TextField(controller: _passwordController, decoration: InputDecoration(labelText: "Contraseña"), obscureText: true),
+            DropdownButtonFormField(
+              value: _sexo,
+              items: ["Masculino", "Femenino"].map((sexo) => DropdownMenuItem(value: sexo, child: Text(sexo))).toList(),
+              onChanged: (value) => setState(() => _sexo = value as String),
+              decoration: InputDecoration(labelText: "Sexo"),
+            ),
+            DropdownButtonFormField(
+              value: _idDeporteSeleccionado,
+              items: _deportes.map((deporte) {
+                return DropdownMenuItem(
+                  value: deporte["id"],
+                  child: Text(deporte["nombre"]),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _idDeporteSeleccionado = value as int?;
+                });
+              },
+              decoration: InputDecoration(labelText: _selectedType == "Coach" ? "Deporte a Entrenar" : "Deporte Favorito"),
+            ),
+            if (_selectedType == "Coach")
+              TextField(controller: _descripcionController, decoration: InputDecoration(labelText: "Descripción")),
+            SizedBox(height: 20),
+            _isLoading
+                ? CircularProgressIndicator()
+                : ElevatedButton(
+                    onPressed: registerUser,
+                    child: Text("Registrar"),
+                  ),
           ],
         ),
       ),

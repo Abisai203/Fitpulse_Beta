@@ -15,7 +15,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
 
   Future<void> login() async {
-    final String apiUrl = "https://fit-pulse-1w4q.onrender.com/auth/login";
+    final String apiUrl = "https://beta-fit-pulse.onrender.com/auth/login";
 
     setState(() {
       _isLoading = true;
@@ -26,8 +26,8 @@ class _LoginPageState extends State<LoginPage> {
         Uri.parse(apiUrl),
         headers: {"Content-Type": "application/json"},
         body: json.encode({
-          "email": _emailController.text.trim(),
-          "contraseña": _passwordController.text.trim(),
+          "correo_electronico": _emailController.text.trim(),
+          "contrasena": _passwordController.text.trim(),
         }),
       );
 
@@ -35,7 +35,7 @@ class _LoginPageState extends State<LoginPage> {
         final data = json.decode(response.body);
         final String token = data['token'];
         final String tipo = data['tipo'];
-
+        
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -70,7 +70,7 @@ class _LoginPageState extends State<LoginPage> {
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
-            crossAxisAlignment:  CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 20),
               const Center(
