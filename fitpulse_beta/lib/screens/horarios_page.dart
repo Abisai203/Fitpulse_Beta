@@ -22,6 +22,7 @@ class _HorariosPageState extends State<HorariosPage> {
   TimeOfDay? startTime;
   TimeOfDay? endTime;
   String selectedDay = 'Lunes';
+  int selectedCupo = 10;
   final List<String> diasSemana = [
     'Lunes',
     'Martes',
@@ -32,16 +33,23 @@ class _HorariosPageState extends State<HorariosPage> {
     'Domingo'
   ];
 
+  final List<int> cuposDisponibles = List.generate(20, (index) => index + 1);
+
   @override
   void initState() {
     super.initState();
     fetchHorarios();
   }
 
+  String formatTimeString(String timeString) {
+    // Extraer solo la hora y los minutos del formato "HH:MM:SS"
+    return timeString.substring(0, 5);
+  }
+
   Future<void> fetchHorarios() async {
     try {
       final response = await http.get(
-        Uri.parse('https://beta-fit-pulse.onrender.com/horarios/${widget.userData['id']}'),
+        Uri.parse('https://beta-fit-pulse.onrender.com/horarios'),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer ${widget.token}",
@@ -49,9 +57,14 @@ class _HorariosPageState extends State<HorariosPage> {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
+        final List<dynamic> allHorarios = json.decode(response.body);
+        // Filtrar horarios por id_entrenador
+        final horariosEntrenador = allHorarios.where(
+          (horario) => horario['id_entrenador'] == widget.userData['id']
+        ).toList();
+        
         setState(() {
-          horarios = List<Map<String, dynamic>>.from(data);
+          horarios = List<Map<String, dynamic>>.from(horariosEntrenador);
           isLoading = false;
         });
       } else {
@@ -74,10 +87,11 @@ class _HorariosPageState extends State<HorariosPage> {
     }
 
     final horarioNuevo = {
-      "dia": selectedDay,
-      "hora_inicio": "${startTime!.hour}:${startTime!.minute.toString().padLeft(2, '0')}",
-      "hora_fin": "${endTime!.hour}:${endTime!.minute.toString().padLeft(2, '0')}",
-      "entrenador_id": widget.userData['id']
+      "id_entrenador": widget.userData['id'],
+      "dia_semana": selectedDay,
+      "hora_inicio": "${startTime!.hour.toString().padLeft(2, '0')}:${startTime!.minute.toString().padLeft(2, '0')}:00",
+      "hora_fin": "${endTime!.hour.toString().padLeft(2, '0')}:${endTime!.minute.toString().padLeft(2, '0')}:00",
+      "cupo": selectedCupo
     };
 
     try {
@@ -93,6 +107,9 @@ class _HorariosPageState extends State<HorariosPage> {
       if (response.statusCode == 201) {
         fetchHorarios();
         Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Horario creado exitosamente')),
+        );
       } else {
         throw Exception('Error al crear horario');
       }
@@ -103,7 +120,49 @@ class _HorariosPageState extends State<HorariosPage> {
     }
   }
 
-  Future<void> eliminarHorario(String horarioId) async {
+  Future<void> actualizarHorario(int horarioId) async {
+    if (startTime == null || endTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Por favor selecciona hora de inicio y fin')),
+      );
+      return;
+    }
+
+    final horarioActualizado = {
+      "id_entrenador": widget.userData['id'],
+      "dia_semana": selectedDay,
+      "hora_inicio": "${startTime!.hour.toString().padLeft(2, '0')}:${startTime!.minute.toString().padLeft(2, '0')}:00",
+      "hora_fin": "${endTime!.hour.toString().padLeft(2, '0')}:${endTime!.minute.toString().padLeft(2, '0')}:00",
+      "cupo": selectedCupo
+    };
+
+    try {
+      final response = await http.put(
+        Uri.parse('https://beta-fit-pulse.onrender.com/horarios/$horarioId'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${widget.token}",
+        },
+        body: json.encode(horarioActualizado),
+      );
+
+      if (response.statusCode == 200) {
+        fetchHorarios();
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Horario actualizado exitosamente')),
+        );
+      } else {
+        throw Exception('Error al actualizar horario');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al actualizar horario: $e')),
+      );
+    }
+  }
+
+  Future<void> eliminarHorario(int horarioId) async {
     try {
       final response = await http.delete(
         Uri.parse('https://beta-fit-pulse.onrender.com/horarios/$horarioId'),
@@ -114,6 +173,9 @@ class _HorariosPageState extends State<HorariosPage> {
 
       if (response.statusCode == 200) {
         fetchHorarios();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Horario eliminado exitosamente')),
+        );
       } else {
         throw Exception('Error al eliminar horario');
       }
@@ -124,7 +186,29 @@ class _HorariosPageState extends State<HorariosPage> {
     }
   }
 
-  void _showAddHorarioModal() {
+  void _showHorarioModal({Map<String, dynamic>? horarioExistente}) {
+    if (horarioExistente != null) {
+      // Pre-fill the form with existing data
+      selectedDay = horarioExistente['dia_semana'];
+      final horaInicio = horarioExistente['hora_inicio'].toString().split(':');
+      final horaFin = horarioExistente['hora_fin'].toString().split(':');
+      
+      startTime = TimeOfDay(
+        hour: int.parse(horaInicio[0]),
+        minute: int.parse(horaInicio[1])
+      );
+      endTime = TimeOfDay(
+        hour: int.parse(horaFin[0]),
+        minute: int.parse(horaFin[1])
+      );
+      selectedCupo = horarioExistente['cupo'];
+    } else {
+      // Reset form for new entry
+      startTime = null;
+      endTime = null;
+      selectedCupo = 10;
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -137,7 +221,7 @@ class _HorariosPageState extends State<HorariosPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Agregar Nuevo Horario',
+                    horarioExistente != null ? 'Editar Horario' : 'Agregar Nuevo Horario',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -189,10 +273,35 @@ class _HorariosPageState extends State<HorariosPage> {
                       }
                     },
                   ),
+                  SizedBox(height: 16),
+                  DropdownButtonFormField<int>(
+                    value: selectedCupo,
+                    decoration: InputDecoration(
+                      labelText: 'Cupo máximo',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: cuposDisponibles.map((int cupo) {
+                      return DropdownMenuItem(
+                        value: cupo,
+                        child: Text(cupo.toString()),
+                      );
+                    }).toList(),
+                    onChanged: (int? newValue) {
+                      setModalState(() {
+                        selectedCupo = newValue!;
+                      });
+                    },
+                  ),
                   SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: agregarHorario,
-                    child: Text('Guardar Horario'),
+                    onPressed: () {
+                      if (horarioExistente != null) {
+                        actualizarHorario(horarioExistente['id_horario']);
+                      } else {
+                        agregarHorario();
+                      }
+                    },
+                    child: Text(horarioExistente != null ? 'Actualizar Horario' : 'Guardar Horario'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green[700],
                       foregroundColor: Colors.white,
@@ -224,7 +333,7 @@ class _HorariosPageState extends State<HorariosPage> {
               itemBuilder: (context, index) {
                 final dia = diasSemana[index];
                 final horariosDelDia = horarios.where(
-                  (horario) => horario['dia'] == dia
+                  (horario) => horario['dia_semana'] == dia
                 ).toList();
 
                 return Card(
@@ -252,12 +361,25 @@ class _HorariosPageState extends State<HorariosPage> {
                         ),
                       ...horariosDelDia.map((horario) => ListTile(
                         title: Text(
-                          '${horario['hora_inicio']} - ${horario['hora_fin']}',
+                          '${formatTimeString(horario['hora_inicio'])} - ${formatTimeString(horario['hora_fin'])}',
                           style: TextStyle(fontSize: 16),
                         ),
-                        trailing: IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => eliminarHorario(horario['id'].toString()),
+                        subtitle: Text(
+                          'Cupo: ${horario['cupo']} personas',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () => _showHorarioModal(horarioExistente: horario),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => eliminarHorario(horario['id_horario']),
+                            ),
+                          ],
                         ),
                       )).toList(),
                     ],
@@ -266,7 +388,7 @@ class _HorariosPageState extends State<HorariosPage> {
               },
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showAddHorarioModal,
+        onPressed: () => _showHorarioModal(),
         child: Icon(Icons.add),
         backgroundColor: Colors.green[700],
       ),
