@@ -35,22 +35,73 @@ class _LoginPageState extends State<LoginPage> {
         final data = json.decode(response.body);
         final String token = data['token'];
         final String tipo = data['tipo'];
+        final Map<String, dynamic> userData = Map<String, dynamic>.from(data['userData']);
         
+        // Procesar la foto de perfil si existe
+        if (userData['foto_perfil'] != null) {
+          try {
+            if (userData['foto_perfil'] is Map && 
+                userData['foto_perfil'].containsKey('data') && 
+                userData['foto_perfil']['data'] is List) {
+              
+              List<int> bufferData = List<int>.from(userData['foto_perfil']['data']);
+              String base64Image = base64Encode(bufferData);
+              userData['foto_perfil'] = base64Image;
+            } else {
+              // Si no está en el formato esperado, establecer como null
+              userData['foto_perfil'] = null;
+            }
+          } catch (e) {
+            print('Error procesando la foto de perfil: $e');
+            userData['foto_perfil'] = null;
+          }
+        }
+
+        // Validar que todos los campos necesarios estén presentes
+        final requiredFields = [
+          'id',
+          'nombre',
+          'apellido_paterno',
+          'apellido_materno',
+          'edad',
+          'correo_electronico',
+          'numero_telefonico',
+          'sexo',
+          'deporte_prioritario_id'
+        ];
+
+        for (var field in requiredFields) {
+          if (!userData.containsKey(field)) {
+            userData[field] = null;
+          }
+        }
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => HomeScreen(token: token, tipo: tipo),
+            builder: (context) => HomeScreen(
+              token: token,
+              tipo: tipo,
+              userData: userData,
+            ),
           ),
         );
       } else {
         final errorMessage = json.decode(response.body)['error'] ?? "Error desconocido";
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } catch (e) {
+      print('Error en el login: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error al conectar con el servidor.")),
+        const SnackBar(
+          content: Text("Error al conectar con el servidor. Por favor, intenta de nuevo."),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       setState(() {
@@ -104,6 +155,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 child: TextFormField(
                   controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     hintText: 'Correo Electrónico',
                     border: OutlineInputBorder(borderSide: BorderSide.none),

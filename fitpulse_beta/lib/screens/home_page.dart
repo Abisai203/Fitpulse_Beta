@@ -2,13 +2,19 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'solicitud_page.dart';
+import 'package:fitpulse_beta/screens/home_page.dart';
 
 class HomeScreen extends StatefulWidget {
   final String token;
   final String tipo;
+  final Map<String, dynamic> userData;
 
-  const HomeScreen({Key? key, required this.token, required this.tipo})
-      : super(key: key);
+  const HomeScreen({
+    Key? key, 
+    required this.token, 
+    required this.tipo,
+    required this.userData,
+  }) : super(key: key);
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -18,11 +24,19 @@ class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> coaches = [];
   List<dynamic> filteredCoaches = [];
   TextEditingController searchController = TextEditingController();
+  String userName = '';
 
   @override
   void initState() {
     super.initState();
     fetchCoaches();
+    setUserName();
+  }
+
+  void setUserName() {
+    setState(() {
+      userName = widget.userData['nombre'] ?? '-----';
+    });
   }
 
   Future<void> fetchCoaches() async {
@@ -58,6 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context) => SolicitudPage(
           coach: coach,
           token: widget.token,
+         // Agregamos los datos del usuario
         ),
       ),
     );
@@ -211,7 +226,6 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -225,10 +239,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Hola, -----', style: TextStyle(fontSize: 18, color: Colors.grey[800])),
+                    Text(
+                      'Hola, ${widget.userData['nombre']}',
+                      style: TextStyle(fontSize: 18, color: Colors.grey[800])
+                    ),
                     SizedBox(height: 4),
-                    Text('Bienvenido', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green[700])),
+                    Text(
+                      'Bienvenido',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green[700]
+                      )
+                    ),
                     SizedBox(height: 16),
+                    // Barra de búsqueda
                     GestureDetector(
                       onTap: _showSearchModal,
                       child: Container(
@@ -250,11 +275,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     SizedBox(height: 16),
+                    // Sección de entrenamiento diario
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Tu entrenamiento para hoy', 
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[700])),
+                        Text(
+                          'Tu entrenamiento para hoy',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[700]
+                          )
+                        ),
                         Text(
                           DateTime.now().toString().split(' ')[0],
                           style: TextStyle(fontSize: 14, color: Colors.grey[600])
@@ -269,20 +301,29 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(10)
                       ),
                       child: Center(
-                        child: Text('Sin rutinas',
-                            style: TextStyle(color: Colors.grey[500], fontSize: 16))
+                        child: Text(
+                          'Sin rutinas',
+                          style: TextStyle(color: Colors.grey[500], fontSize: 16)
+                        )
                       ),
                     ),
                   ],
                 ),
               ),
               SizedBox(height: 20),
+              // Sección de entrenadores destacados
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('Entrenadores destacados',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+                  child: Text(
+                    'Entrenadores destacados',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87
+                    )
+                  ),
                 ),
               ),
               SizedBox(height: 10),
@@ -330,12 +371,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               SizedBox(height: 20),
+              // Sección de categorías
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('Otras Categorías',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+                  child: Text(
+                    'Otras Categorías',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87
+                    )
+                  ),
                 ),
               ),
               GridView.count(
