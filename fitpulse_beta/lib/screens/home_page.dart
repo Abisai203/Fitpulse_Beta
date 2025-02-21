@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'solicitud_page.dart';
 import 'package:fitpulse_beta/screens/home_page.dart';
+import 'package:fitpulse_beta/screens/horarios_page.dart';
 
 class HomeScreen extends StatefulWidget {
   final String token;
@@ -10,8 +11,8 @@ class HomeScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
 
   const HomeScreen({
-    Key? key, 
-    required this.token, 
+    Key? key,
+    required this.token,
     required this.tipo,
     required this.userData,
   }) : super(key: key);
@@ -56,7 +57,8 @@ class _HomeScreenState extends State<HomeScreen> {
           filteredCoaches = coaches;
         });
       } else {
-        throw Exception('Error en la petición: ${response.statusCode} - ${response.body}');
+        throw Exception(
+            'Error en la petición: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -72,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context) => SolicitudPage(
           coach: coach,
           token: widget.token,
-         // Agregamos los datos del usuario
+          // Agregamos los datos del usuario
         ),
       ),
     );
@@ -84,14 +86,17 @@ class _HomeScreenState extends State<HomeScreen> {
         filteredCoaches = coaches;
       } else {
         filteredCoaches = coaches.where((coach) {
-          final fullName = '${coach['nombre']} ${coach['apellido_paterno']} ${coach['apellido_materno']}'.toLowerCase();
+          final fullName =
+              '${coach['nombre']} ${coach['apellido_paterno']} ${coach['apellido_materno']}'
+                  .toLowerCase();
           final email = coach['correo_electronico'].toString().toLowerCase();
-          final description = coach['descripcion']?.toString().toLowerCase() ?? '';
+          final description =
+              coach['descripcion']?.toString().toLowerCase() ?? '';
           final searchLower = query.toLowerCase();
-          
-          return fullName.contains(searchLower) || 
-                 email.contains(searchLower) ||
-                 description.contains(searchLower);
+
+          return fullName.contains(searchLower) ||
+              email.contains(searchLower) ||
+              description.contains(searchLower);
         }).toList();
       }
     });
@@ -158,7 +163,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           controller: searchController,
                           autofocus: true,
                           decoration: InputDecoration(
-                            hintText: 'Buscar por nombre, correo o descripción...',
+                            hintText:
+                                'Buscar por nombre, correo o descripción...',
                             prefixIcon: Icon(Icons.search),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -186,7 +192,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: ListTile(
                             leading: CircleAvatar(
                               backgroundColor: Colors.green[100],
-                              child: Icon(Icons.person, color: Colors.green[700]),
+                              child:
+                                  Icon(Icons.person, color: Colors.green[700]),
                             ),
                             title: Text(
                               '${coach['nombre']} ${coach['apellido_paterno']} ${coach['apellido_materno']}',
@@ -199,7 +206,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   coach['correo_electronico'] ?? 'Sin correo',
                                   style: TextStyle(color: Colors.grey[600]),
                                 ),
-                                if (coach['descripcion'] != null && coach['descripcion'].toString().isNotEmpty)
+                                if (coach['descripcion'] != null &&
+                                    coach['descripcion'].toString().isNotEmpty)
                                   Text(
                                     coach['descripcion'],
                                     style: TextStyle(color: Colors.grey[600]),
@@ -226,6 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -239,25 +248,50 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Hola, ${widget.userData['nombre']}',
-                      style: TextStyle(fontSize: 18, color: Colors.grey[800])
-                    ),
+                    Text('Hola, ${widget.userData['nombre']}',
+                        style:
+                            TextStyle(fontSize: 18, color: Colors.grey[800])),
                     SizedBox(height: 4),
-                    Text(
-                      'Bienvenido',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green[700]
-                      )
-                    ),
+                    Text('Bienvenido',
+                        style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green[700])),
                     SizedBox(height: 16),
+                    if (widget.tipo == 'entrenador')
+                      Container(
+                        width: double.infinity,
+                        margin: EdgeInsets.only(bottom: 16),
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => HorariosPage(
+                                  token: widget.token,
+                                  userData: widget.userData,
+                                ),
+                              ),
+                            );
+                          },
+                          icon: Icon(Icons.calendar_today),
+                          label: Text('Gestionar Horarios'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green[700],
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ),
                     // Barra de búsqueda
                     GestureDetector(
                       onTap: _showSearchModal,
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.grey[300]!),
                           borderRadius: BorderRadius.circular(10),
@@ -279,33 +313,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Tu entrenamiento para hoy',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey[700]
-                          )
-                        ),
-                        Text(
-                          DateTime.now().toString().split(' ')[0],
-                          style: TextStyle(fontSize: 14, color: Colors.grey[600])
-                        ),
+                        Text('Tu entrenamiento para hoy',
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[700])),
+                        Text(DateTime.now().toString().split(' ')[0],
+                            style: TextStyle(
+                                fontSize: 14, color: Colors.grey[600])),
                       ],
                     ),
                     SizedBox(height: 10),
                     Container(
                       height: 100,
                       decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(10)
-                      ),
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(10)),
                       child: Center(
-                        child: Text(
-                          'Sin rutinas',
-                          style: TextStyle(color: Colors.grey[500], fontSize: 16)
-                        )
-                      ),
+                          child: Text('Sin rutinas',
+                              style: TextStyle(
+                                  color: Colors.grey[500], fontSize: 16))),
                     ),
                   ],
                 ),
@@ -316,14 +343,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Align(
                   alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Entrenadores destacados',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87
-                    )
-                  ),
+                  child: Text('Entrenadores destacados',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87)),
                 ),
               ),
               SizedBox(height: 10),
@@ -348,10 +372,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             CircleAvatar(
-                              radius: 30,
-                              backgroundColor: Colors.grey[300],
-                              child: Icon(Icons.person, color: Colors.white)
-                            ),
+                                radius: 30,
+                                backgroundColor: Colors.grey[300],
+                                child: Icon(Icons.person, color: Colors.white)),
                             SizedBox(height: 5),
                             Text(
                               coach['nombre'],
@@ -376,14 +399,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Align(
                   alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Otras Categorías',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87
-                    )
-                  ),
+                  child: Text('Otras Categorías',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87)),
                 ),
               ),
               GridView.count(
@@ -410,7 +430,8 @@ class _HomeScreenState extends State<HomeScreen> {
         unselectedItemColor: Colors.white54,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
-          BottomNavigationBarItem(icon: Icon(Icons.fitness_center), label: 'Ejercicios'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.fitness_center), label: 'Ejercicios'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
         ],
       ),
