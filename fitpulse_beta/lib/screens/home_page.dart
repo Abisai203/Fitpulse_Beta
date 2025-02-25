@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'solicitud_page.dart';
 import 'package:fitpulse_beta/screens/home_page.dart';
 import 'package:fitpulse_beta/screens/horarios_page.dart';
+import 'package:fitpulse_beta/screens/solicitud_page.dart'; 
 
 class HomeScreen extends StatefulWidget {
   final String token;
@@ -67,18 +68,29 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void navigateToSolicitudPage(Map<String, dynamic> coach) {
+ void navigateToSolicitudPage(Map<String, dynamic> coach) {
+  if (widget.userData != null && widget.token != null) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => SolicitudPage(
+          key: UniqueKey(),
           coach: coach,
           token: widget.token,
-          // Agregamos los datos del usuario
+          userData: widget.userData,
         ),
       ),
     );
+  } else {
+    // Manejo del error si los datos no están disponibles
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Error: Datos de usuario no disponibles'),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
+}
 
   void filterCoaches(String query) {
     setState(() {
