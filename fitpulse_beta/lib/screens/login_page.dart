@@ -13,8 +13,30 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isPasswordVisible = false;
 
   Future<void> login() async {
+    // Validar campos antes de intentar iniciar sesión
+    if (_emailController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Por favor, ingresa tu correo electrónico"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (_passwordController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Por favor, ingresa tu contraseña"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     final String apiUrl = "https://beta-fit-pulse.onrender.com/auth/login";
 
     setState(() {
@@ -140,6 +162,8 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 40),
+              
+              // Campo de correo electrónico
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -158,12 +182,15 @@ class _LoginPageState extends State<LoginPage> {
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     hintText: 'Correo Electrónico',
+                    prefixIcon: Icon(Icons.email_outlined),
                     border: OutlineInputBorder(borderSide: BorderSide.none),
                     contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
+              
+              // Campo de contraseña con botón para mostrar/ocultar
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -179,14 +206,29 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 child: TextFormField(
                   controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
+                  obscureText: !_isPasswordVisible,
+                  decoration: InputDecoration(
                     hintText: 'Contraseña',
+                    prefixIcon: Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordVisible 
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      },
+                    ),
                     border: OutlineInputBorder(borderSide: BorderSide.none),
                     contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   ),
                 ),
               ),
+              
               const SizedBox(height: 24),
               _isLoading
                   ? const Center(child: CircularProgressIndicator())

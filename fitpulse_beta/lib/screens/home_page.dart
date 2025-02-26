@@ -5,6 +5,7 @@ import 'solicitud_page.dart';
 import 'package:fitpulse_beta/screens/home_page.dart';
 import 'package:fitpulse_beta/screens/horarios_page.dart';
 import 'package:fitpulse_beta/screens/solicitud_page.dart'; 
+import 'package:fitpulse_beta/screens/notificacion_page.dart';
 
 class HomeScreen extends StatefulWidget {
   final String token;
@@ -70,6 +71,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
  void navigateToSolicitudPage(Map<String, dynamic> coach) {
   if (widget.userData != null && widget.token != null) {
+    // Imprimimos los datos de usuario para depuración
+    print("Datos de usuario que se pasarán: ${widget.userData}");
+    
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -251,6 +255,29 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+    appBar: AppBar(
+  backgroundColor: Colors.white,
+  elevation: 0,
+  title: Text('FitPulse',
+      style: TextStyle(color: Colors.green[700], fontWeight: FontWeight.bold)),
+  actions: [
+    IconButton(
+      icon: Icon(Icons.notifications, color: Colors.green[700]),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => NotificacionPage(
+              token: widget.token,
+              userData: widget.userData,
+              tipo: widget.tipo, // Pasar el tipo de usuario
+            ),
+          ),
+        );
+      },
+    ),
+  ],
+),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
