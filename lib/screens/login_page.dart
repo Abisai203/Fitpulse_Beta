@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:fitpulse_beta/screens/register_page.dart';
-import 'home_page.dart';
+import 'package:fitpulse_beta/screens/home_entrenador_page.dart'; // Importamos la página del entrenador
+import 'package:fitpulse_beta/screens/home_alumno_page.dart'; // Importamos la página del alumno
 
 class LoginPage extends StatefulWidget {
   @override
@@ -57,16 +58,17 @@ class _LoginPageState extends State<LoginPage> {
         final data = json.decode(response.body);
         final String token = data['token'];
         final String tipo = data['tipo'];
-        final Map<String, dynamic> userData = Map<String, dynamic>.from(data['userData']);
-        
+        final Map<String, dynamic> userData =
+            Map<String, dynamic>.from(data['userData']);
+
         // Procesar la foto de perfil si existe
         if (userData['foto_perfil'] != null) {
           try {
-            if (userData['foto_perfil'] is Map && 
-                userData['foto_perfil'].containsKey('data') && 
+            if (userData['foto_perfil'] is Map &&
+                userData['foto_perfil'].containsKey('data') &&
                 userData['foto_perfil']['data'] is List) {
-              
-              List<int> bufferData = List<int>.from(userData['foto_perfil']['data']);
+              List<int> bufferData =
+                  List<int>.from(userData['foto_perfil']['data']);
               String base64Image = base64Encode(bufferData);
               userData['foto_perfil'] = base64Image;
             } else {
@@ -98,18 +100,39 @@ class _LoginPageState extends State<LoginPage> {
           }
         }
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomeScreen(
-              token: token,
-              tipo: tipo,
-              userData: userData,
+        // Redireccionar según el tipo de usuario
+        if (tipo == 'entrenador') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomeEntrenadorPage(
+                token: token,
+                userData: userData,
+              ),
             ),
-          ),
-        );
+          );
+        } else if (tipo == 'usuario') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomeAlumnoPage(
+                token: token,
+                userData: userData,
+              ),
+            ),
+          );
+        } else {
+          // Si hay un tipo no reconocido, mostrar error
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("usuario no reconocido"),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       } else {
-        final errorMessage = json.decode(response.body)['error'] ?? "Error desconocido";
+        final errorMessage =
+            json.decode(response.body)['error'] ?? "Error desconocido";
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
@@ -121,7 +144,8 @@ class _LoginPageState extends State<LoginPage> {
       print('Error en el login: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Error al conectar con el servidor. Por favor, intenta de nuevo."),
+          content: Text(
+              "Error al conectar con el servidor. Por favor, intenta de nuevo."),
           backgroundColor: Colors.red,
         ),
       );
@@ -151,7 +175,8 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     Text(
                       "Bienvenido",
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 8),
                     Text(
@@ -162,7 +187,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 40),
-              
+
               // Campo de correo electrónico
               Container(
                 decoration: BoxDecoration(
@@ -184,12 +209,13 @@ class _LoginPageState extends State<LoginPage> {
                     hintText: 'Correo Electrónico',
                     prefixIcon: Icon(Icons.email_outlined),
                     border: OutlineInputBorder(borderSide: BorderSide.none),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Campo de contraseña con botón para mostrar/ocultar
               Container(
                 decoration: BoxDecoration(
@@ -212,7 +238,7 @@ class _LoginPageState extends State<LoginPage> {
                     prefixIcon: Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _isPasswordVisible 
+                        _isPasswordVisible
                             ? Icons.visibility_off
                             : Icons.visibility,
                         color: Colors.grey,
@@ -224,11 +250,12 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
                     border: OutlineInputBorder(borderSide: BorderSide.none),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
               _isLoading
                   ? const Center(child: CircularProgressIndicator())

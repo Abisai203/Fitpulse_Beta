@@ -11,8 +11,10 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   String? _selectedType;
   final TextEditingController _nombreController = TextEditingController();
-  final TextEditingController _apellidoPaternoController = TextEditingController();
-  final TextEditingController _apellidoMaternoController = TextEditingController();
+  final TextEditingController _apellidoPaternoController =
+      TextEditingController();
+  final TextEditingController _apellidoMaternoController =
+      TextEditingController();
   final TextEditingController _edadController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -42,7 +44,7 @@ class _RegisterPageState extends State<RegisterPage> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    
+
     if (_selectedType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Por favor selecciona el tipo de usuario.")),
@@ -52,9 +54,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
     if (_idDeporteSeleccionado == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_selectedType == "Coach" 
-            ? "Por favor selecciona un deporte para entrenar." 
-            : "Por favor selecciona tu deporte favorito.")),
+        SnackBar(
+            content: Text(_selectedType == "Coach"
+                ? "Por favor selecciona un deporte para entrenar."
+                : "Por favor selecciona tu deporte favorito.")),
       );
       return;
     }
@@ -165,22 +168,24 @@ class _RegisterPageState extends State<RegisterPage> {
                 onChanged: (value) {
                   setState(() {
                     _selectedType = value as String?;
-                    _idDeporteSeleccionado = null; // Restablecer selección de deporte
+                    _idDeporteSeleccionado =
+                        null; // Restablecer selección de deporte
                   });
                 },
                 decoration: InputDecoration(
                   labelText: "Tipo de Usuario ",
                   border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                 ),
               ),
               SizedBox(height: 16),
-              
+
               // Nombre
               TextFormField(
-                controller: _nombreController, 
+                controller: _nombreController,
                 decoration: InputDecoration(
-                  labelText: "Nombre ", 
+                  labelText: "Nombre ",
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person),
                 ),
@@ -192,12 +197,12 @@ class _RegisterPageState extends State<RegisterPage> {
                 },
               ),
               SizedBox(height: 16),
-              
+
               // Apellido Paterno
               TextFormField(
-                controller: _apellidoPaternoController, 
+                controller: _apellidoPaternoController,
                 decoration: InputDecoration(
-                  labelText: "Apellido Paterno ", 
+                  labelText: "Apellido Paterno ",
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person_outline),
                 ),
@@ -209,12 +214,12 @@ class _RegisterPageState extends State<RegisterPage> {
                 },
               ),
               SizedBox(height: 16),
-              
+
               // Apellido Materno
               TextFormField(
-                controller: _apellidoMaternoController, 
+                controller: _apellidoMaternoController,
                 decoration: InputDecoration(
-                  labelText: "Apellido Materno ", 
+                  labelText: "Apellido Materno ",
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person_outline),
                 ),
@@ -226,12 +231,12 @@ class _RegisterPageState extends State<RegisterPage> {
                 },
               ),
               SizedBox(height: 16),
-              
+
               // Edad
               TextFormField(
-                controller: _edadController, 
+                controller: _edadController,
                 decoration: InputDecoration(
-                  labelText: "Edad ", 
+                  labelText: "Edad ",
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.calendar_today),
                 ),
@@ -248,12 +253,12 @@ class _RegisterPageState extends State<RegisterPage> {
                 },
               ),
               SizedBox(height: 16),
-              
+
               // Número telefónico
               TextFormField(
-                controller: _telefonoController, 
+                controller: _telefonoController,
                 decoration: InputDecoration(
-                  labelText: "Número Telefónico ", 
+                  labelText: "Número Telefónico ",
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.phone),
                   hintText: "10 dígitos",
@@ -270,12 +275,12 @@ class _RegisterPageState extends State<RegisterPage> {
                 },
               ),
               SizedBox(height: 16),
-              
+
               // Correo Electrónico
               TextFormField(
-                controller: _emailController, 
+                controller: _emailController,
                 decoration: InputDecoration(
-                  labelText: "Correo Electrónico ", 
+                  labelText: "Correo Electrónico ",
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.email),
                 ),
@@ -291,18 +296,18 @@ class _RegisterPageState extends State<RegisterPage> {
                 },
               ),
               SizedBox(height: 16),
-              
+
               // Contraseña con visibilidad
               TextFormField(
-                controller: _passwordController, 
+                controller: _passwordController,
                 decoration: InputDecoration(
-                  labelText: "Contraseña ", 
+                  labelText: "Contraseña ",
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.lock),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _isPasswordVisible 
-                          ? Icons.visibility_off 
+                      _isPasswordVisible
+                          ? Icons.visibility_off
                           : Icons.visibility,
                     ),
                     onPressed: () {
@@ -324,19 +329,21 @@ class _RegisterPageState extends State<RegisterPage> {
                 },
               ),
               SizedBox(height: 16),
-              
+
               // Sexo
               DropdownButtonFormField(
                 value: _sexo,
                 items: ["Masculino", "Femenino"]
-                    .map((sexo) => DropdownMenuItem(value: sexo, child: Text(sexo)))
+                    .map((sexo) =>
+                        DropdownMenuItem(value: sexo, child: Text(sexo)))
                     .toList(),
                 onChanged: (value) => setState(() => _sexo = value as String),
                 decoration: InputDecoration(
                   labelText: "Sexo ",
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.people),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                 ),
                 validator: (value) {
                   if (value == null) {
@@ -346,7 +353,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 },
               ),
               SizedBox(height: 16),
-              
+
               // Deporte
               DropdownButtonFormField(
                 value: _idDeporteSeleccionado,
@@ -362,12 +369,13 @@ class _RegisterPageState extends State<RegisterPage> {
                   });
                 },
                 decoration: InputDecoration(
-                  labelText: _selectedType == "Coach" 
-                      ? "Deporte a Entrenar " 
+                  labelText: _selectedType == "Coach"
+                      ? "Deporte a Entrenar "
                       : "Deporte Favorito ",
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.sports),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                 ),
                 validator: (value) {
                   if (value == null) {
@@ -379,7 +387,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 },
               ),
               SizedBox(height: 16),
-              
+
               // Campo de descripción solo para entrenadores
               if (_selectedType == "Coach")
                 TextFormField(
@@ -392,21 +400,22 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   maxLines: 3,
                   validator: (value) {
-                    if (_selectedType == "Coach" && (value == null || value.trim().isEmpty)) {
+                    if (_selectedType == "Coach" &&
+                        (value == null || value.trim().isEmpty)) {
                       return 'La descripción es obligatoria para entrenadores';
                     }
                     return null;
                   },
                 ),
               if (_selectedType == "Coach") SizedBox(height: 16),
-              
+
               // Nota sobre campos obligatorios
               Text(
                 "* Campos obligatorios",
                 style: TextStyle(color: Colors.grey, fontSize: 12),
               ),
               SizedBox(height: 20),
-              
+
               // Botón de registro
               _isLoading
                   ? Center(child: CircularProgressIndicator())
@@ -416,7 +425,8 @@ class _RegisterPageState extends State<RegisterPage> {
                         padding: const EdgeInsets.symmetric(vertical: 12.0),
                         child: Text(
                           "REGISTRAR",
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ),
                       style: ElevatedButton.styleFrom(

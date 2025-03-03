@@ -42,17 +42,21 @@ class _NotificacionPageState extends State<NotificacionPage> {
     });
 
     try {
-      final id = widget.userData['id'] ?? widget.userData['id_usuario'] ?? widget.userData['id_entrenador'];
-      
+      final id = widget.userData['id'] ??
+          widget.userData['id_usuario'] ??
+          widget.userData['id_entrenador'];
+
       if (id == null) {
         throw Exception('No se pudo encontrar el ID del usuario');
       }
 
       String endpoint;
       if (widget.tipo == 'entrenador') {
-        endpoint = 'https://beta-fit-pulse.onrender.com/solicitudes/entrenador/$id';
+        endpoint =
+            'https://beta-fit-pulse.onrender.com/solicitudes/entrenador/$id';
       } else {
-        endpoint = 'https://beta-fit-pulse.onrender.com/solicitudes/usuario/$id';
+        endpoint =
+            'https://beta-fit-pulse.onrender.com/solicitudes/usuario/$id';
       }
 
       final response = await http.get(
@@ -73,17 +77,19 @@ class _NotificacionPageState extends State<NotificacionPage> {
           } else if (responseData.containsKey('data')) {
             solicitudesList = responseData['data'];
           } else {
-            solicitudesList = responseData.values.first is List ? responseData.values.first : [responseData];
+            solicitudesList = responseData.values.first is List
+                ? responseData.values.first
+                : [responseData];
           }
         } else if (responseData is List<dynamic>) {
           solicitudesList = responseData;
         }
-        
+
         // Convertir a Lista de Maps
-        List<Map<String, dynamic>> solicitudesMaps = List<Map<String, dynamic>>.from(
-          solicitudesList.map((item) => item is Map<String, dynamic> ? item : <String, dynamic>{})
-        );
-        
+        List<Map<String, dynamic>> solicitudesMaps =
+            List<Map<String, dynamic>>.from(solicitudesList.map((item) =>
+                item is Map<String, dynamic> ? item : <String, dynamic>{}));
+
         // Ordenar solicitudes por fecha (más recientes primero)
         solicitudesMaps.sort((a, b) {
           DateTime dateA = DateTime.parse(a['fecha_solicitud'] ?? '2000-01-01');
@@ -101,7 +107,8 @@ class _NotificacionPageState extends State<NotificacionPage> {
           await _fetchAdditionalData(solicitud);
         }
       } else {
-        throw Exception('Error en la petición: ${response.statusCode} - ${response.body}');
+        throw Exception(
+            'Error en la petición: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       setState(() {
@@ -109,7 +116,7 @@ class _NotificacionPageState extends State<NotificacionPage> {
         hasError = true;
         errorMessage = 'Error al cargar solicitudes: $e';
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: $e'),
@@ -153,7 +160,7 @@ class _NotificacionPageState extends State<NotificacionPage> {
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
-        
+
         // Handle different response structures
         Map<String, dynamic> horarioData;
         if (responseData is Map<String, dynamic>) {
@@ -194,7 +201,7 @@ class _NotificacionPageState extends State<NotificacionPage> {
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
-        
+
         // Handle different response structures
         Map<String, dynamic> usuarioData;
         if (responseData is Map<String, dynamic>) {
@@ -226,7 +233,8 @@ class _NotificacionPageState extends State<NotificacionPage> {
 
     try {
       final response = await http.get(
-        Uri.parse('https://beta-fit-pulse.onrender.com/entrenadores/$entrenadorId'),
+        Uri.parse(
+            'https://beta-fit-pulse.onrender.com/entrenadores/$entrenadorId'),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer ${widget.token}",
@@ -235,7 +243,7 @@ class _NotificacionPageState extends State<NotificacionPage> {
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
-        
+
         // Handle different response structures
         Map<String, dynamic> entrenadorData;
         if (responseData is Map<String, dynamic>) {
@@ -259,10 +267,12 @@ class _NotificacionPageState extends State<NotificacionPage> {
     }
   }
 
-  Future<void> _actualizarEstadoSolicitud(int solicitudId, String nuevoEstado) async {
+  Future<void> _actualizarEstadoSolicitud(
+      int solicitudId, String nuevoEstado) async {
     try {
       final response = await http.put(
-        Uri.parse('https://beta-fit-pulse.onrender.com/solicitudes/$solicitudId'),
+        Uri.parse(
+            'https://beta-fit-pulse.onrender.com/solicitudes/$solicitudId'),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer ${widget.token}",
@@ -290,7 +300,8 @@ class _NotificacionPageState extends State<NotificacionPage> {
           ),
         );
       } else {
-        throw Exception('Error al actualizar: ${response.statusCode} - ${response.body}');
+        throw Exception(
+            'Error al actualizar: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -329,19 +340,20 @@ class _NotificacionPageState extends State<NotificacionPage> {
 
   Widget _buildHorarioInfo(int? horarioId) {
     if (horarioId == null) return const Text('Horario no disponible');
-    
+
     final horario = horariosCache[horarioId];
-    if (horario == null) return const Text('Cargando información del horario...');
-    
+    if (horario == null)
+      return const Text('Cargando información del horario...');
+
     // Formatear horas y obtener el día
-    String horaInicio = horario['hora_inicio'] != null 
-        ? horario['hora_inicio'].toString().substring(0, 5) 
+    String horaInicio = horario['hora_inicio'] != null
+        ? horario['hora_inicio'].toString().substring(0, 5)
         : '--:--';
-    String horaFin = horario['hora_fin'] != null 
-        ? horario['hora_fin'].toString().substring(0, 5) 
+    String horaFin = horario['hora_fin'] != null
+        ? horario['hora_fin'].toString().substring(0, 5)
         : '--:--';
     String dia = horario['dia_semana'] ?? 'No especificado';
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -371,20 +383,19 @@ class _NotificacionPageState extends State<NotificacionPage> {
     if (personId == null) {
       return const Text('Información no disponible');
     }
-    
-    final personData = isEntrenador
-        ? entrenadoresCache[personId]
-        : usuariosCache[personId];
-    
+
+    final personData =
+        isEntrenador ? entrenadoresCache[personId] : usuariosCache[personId];
+
     if (personData == null) {
       return const Text('Cargando información...');
     }
-    
+
     String nombre = personData['nombre'] ?? '';
     String apellidoP = personData['apellido_paterno'] ?? '';
     String apellidoM = personData['apellido_materno'] ?? '';
     String nombreCompleto = '$nombre $apellidoP $apellidoM'.trim();
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -393,7 +404,9 @@ class _NotificacionPageState extends State<NotificacionPage> {
             Icon(Icons.person, size: 16, color: Colors.green[700]),
             const SizedBox(width: 4),
             Text(
-              nombreCompleto.isNotEmpty ? nombreCompleto : 'Nombre no disponible',
+              nombreCompleto.isNotEmpty
+                  ? nombreCompleto
+                  : 'Nombre no disponible',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
@@ -528,9 +541,10 @@ class _NotificacionPageState extends State<NotificacionPage> {
                       itemBuilder: (context, index) {
                         final solicitud = solicitudes[index];
                         final estado = solicitud['estado'] ?? 'Desconocido';
-                        final fechaSolicitud = _formatDate(solicitud['fecha_solicitud']);
+                        final fechaSolicitud =
+                            _formatDate(solicitud['fecha_solicitud']);
                         final solicitudId = solicitud['id_solicitud'];
-                        
+
                         return Card(
                           margin: const EdgeInsets.only(bottom: 12),
                           elevation: 2,
@@ -543,7 +557,8 @@ class _NotificacionPageState extends State<NotificacionPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
                                       child: Text(
@@ -562,7 +577,8 @@ class _NotificacionPageState extends State<NotificacionPage> {
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: _getStatusColor(estado).withOpacity(0.1),
+                                        color: _getStatusColor(estado)
+                                            .withOpacity(0.1),
                                         borderRadius: BorderRadius.circular(20),
                                         border: Border.all(
                                           color: _getStatusColor(estado),
@@ -589,7 +605,7 @@ class _NotificacionPageState extends State<NotificacionPage> {
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                
+
                                 // Mostrar información según el tipo de usuario
                                 if (widget.tipo == 'entrenador') ...[
                                   // Si somos entrenador, mostramos datos del alumno
@@ -601,7 +617,8 @@ class _NotificacionPageState extends State<NotificacionPage> {
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  _buildPersonInfo(solicitud['id_usuario'], false),
+                                  _buildPersonInfo(
+                                      solicitud['id_usuario'], false),
                                 ] else ...[
                                   // Si somos alumno, mostramos datos del entrenador
                                   const Text(
@@ -612,9 +629,10 @@ class _NotificacionPageState extends State<NotificacionPage> {
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  _buildPersonInfo(solicitud['id_entrenador'], true),
+                                  _buildPersonInfo(
+                                      solicitud['id_entrenador'], true),
                                 ],
-                                
+
                                 const SizedBox(height: 12),
                                 const Text(
                                   'Horario solicitado:',
@@ -625,11 +643,12 @@ class _NotificacionPageState extends State<NotificacionPage> {
                                 ),
                                 const SizedBox(height: 4),
                                 _buildHorarioInfo(solicitud['id_horario']),
-                                
+
                                 const SizedBox(height: 12),
                                 Row(
                                   children: [
-                                    Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
+                                    Icon(Icons.access_time,
+                                        size: 16, color: Colors.grey[600]),
                                     const SizedBox(width: 4),
                                     Text(
                                       'Solicitud realizada: $fechaSolicitud',
@@ -640,25 +659,30 @@ class _NotificacionPageState extends State<NotificacionPage> {
                                     ),
                                   ],
                                 ),
-                                
+
                                 // Botones de acción solo para entrenadores y solicitudes pendientes
-                                if (widget.tipo == 'entrenador' && 
+                                if (widget.tipo == 'entrenador' &&
                                     estado.toLowerCase() == 'pendiente') ...[
                                   const SizedBox(height: 16),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
                                       OutlinedButton(
-                                        onPressed: () => _actualizarEstadoSolicitud(solicitudId, 'Rechazada'),
+                                        onPressed: () =>
+                                            _actualizarEstadoSolicitud(
+                                                solicitudId, 'Rechazada'),
                                         style: OutlinedButton.styleFrom(
                                           foregroundColor: Colors.red,
-                                          side: const BorderSide(color: Colors.red),
+                                          side: const BorderSide(
+                                              color: Colors.red),
                                         ),
                                         child: const Text('Rechazar'),
                                       ),
                                       const SizedBox(width: 8),
                                       ElevatedButton(
-                                        onPressed: () => _actualizarEstadoSolicitud(solicitudId, 'Aceptada'),
+                                        onPressed: () =>
+                                            _actualizarEstadoSolicitud(
+                                                solicitudId, 'Aceptada'),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: Colors.green[700],
                                         ),

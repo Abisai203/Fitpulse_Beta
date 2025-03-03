@@ -35,52 +35,55 @@ class _SolicitudPageState extends State<SolicitudPage> {
       isLoading = true;
     });
 
-    try {
-      final coachId = widget.coach['id_entrenador'];
+   try {
+  final coachId = widget.coach['id_entrenador'];
 
-      final response = await http.get(
-        Uri.parse('https://beta-fit-pulse.onrender.com/horarios/entrenador/$coachId'),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer ${widget.token}",
-        },
-      );
+  final response = await http.get(
+    Uri.parse('https://beta-fit-pulse.onrender.com/horarios/entrenador/$coachId'),
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer ${widget.token}",
+    },
+  );
 
-      if (response.statusCode == 200) {
-        final dynamic responseData = json.decode(response.body);
-        List<dynamic> coachHorarios = [];
+  if (response.statusCode == 200) {
+    final dynamic responseData = json.decode(response.body);
+    List<dynamic> coachHorarios = [];
 
-        if (responseData is Map<String, dynamic>) {
-          if (responseData.containsKey('horarios')) {
-            coachHorarios = responseData['horarios'];
-          } else if (responseData.containsKey('data')) {
-            coachHorarios = responseData['data'];
-          } else {
-            coachHorarios = responseData.values.toList();
-          }
-        } else if (responseData is List<dynamic>) {
-          coachHorarios = responseData;
-        }
-
-        setState(() {
-          horarios = List<Map<String, dynamic>>.from(
-            coachHorarios.map((item) =>
-                item is Map<String, dynamic> ? item : <String, dynamic>{})
-          );
-          isLoading = false;
-        });
+    if (responseData is Map<String, dynamic>) {
+      if (responseData.containsKey('horarios')) {
+        coachHorarios = responseData['horarios'];
+      } else if (responseData.containsKey('data')) {
+        coachHorarios = responseData['data'];
       } else {
-        throw Exception('Error en la petición: ${response.statusCode} - ${response.body}');
+        coachHorarios = responseData.values.toList();
       }
-    } catch (e) {
-      setState(() => isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al cargar horarios: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    } else if (responseData is List<dynamic>) {
+      coachHorarios = responseData;
     }
+
+    if (mounted) { // Verifica si el widget sigue montado
+      setState(() {
+        horarios = List<Map<String, dynamic>>.from(coachHorarios.map((item) =>
+            item is Map<String, dynamic> ? item : <String, dynamic>{}));
+        isLoading = false;
+      });
+    }
+  } else {
+    throw Exception('Error en la petición: ${response.statusCode} - ${response.body}');
+  }
+} catch (e) {
+  if (mounted) { // Verifica antes de llamar a setState()
+    setState(() => isLoading = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error al cargar horarios: $e'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+}
+
   }
 
   Future<void> _solicitarEntrenador() async {
@@ -105,11 +108,12 @@ class _SolicitudPageState extends State<SolicitudPage> {
       if (userId == null) {
         // Intentar con otras posibles claves si id_usuario no está disponible
         final alternativeId = widget.userData['id'];
-        
+
         if (alternativeId == null) {
-          throw Exception('ID de usuario no disponible en los datos de usuario');
+          throw Exception(
+              'ID de usuario no disponible en los datos de usuario');
         }
-        
+
         // Si encontramos un ID alternativo, lo usamos
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -118,16 +122,16 @@ class _SolicitudPageState extends State<SolicitudPage> {
           ),
         );
       }
-      
+
       final int scheduleId = selectedHorario!['id_horario'];
       final int coachId = widget.coach['id_entrenador'];
-      
+
       // Imprimir datos para depuración
       print('Datos de usuario: ${widget.userData}');
       print('ID de usuario encontrado: $userId');
       print('ID de horario seleccionado: $scheduleId');
       print('ID de entrenador: $coachId');
-      
+
       // Crear la estructura de la solicitud
       final Map<String, dynamic> solicitudData = {
         "id_usuario": userId,
@@ -149,7 +153,8 @@ class _SolicitudPageState extends State<SolicitudPage> {
         body: json.encode(solicitudData),
       );
 
-      print('Respuesta del servidor: ${response.statusCode} - ${response.body}');
+      print(
+          'Respuesta del servidor: ${response.statusCode} - ${response.body}');
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         // Solicitud creada con éxito
@@ -167,7 +172,8 @@ class _SolicitudPageState extends State<SolicitudPage> {
         }
       } else {
         final errorResponse = json.decode(response.body);
-        final errorMessage = errorResponse['error'] ?? 'Error al enviar la solicitud';
+        final errorMessage =
+            errorResponse['error'] ?? 'Error al enviar la solicitud';
         throw Exception(errorMessage);
       }
     } catch (e) {
@@ -234,7 +240,7 @@ class _SolicitudPageState extends State<SolicitudPage> {
 
     // Organizar horarios por día de la semana
     Map<String, List<Map<String, dynamic>>> horariosPorDia = {};
-    
+
     // Orden de los días de la semana
     final ordenDias = {
       'Lunes': 1,
@@ -273,11 +279,11 @@ class _SolicitudPageState extends State<SolicitudPage> {
           ),
         ),
         const SizedBox(height: 8),
-        
+
         // Mostrar cada día con sus horarios
         ...diasOrdenados.map((dia) {
           final horariosDelDia = horariosPorDia[dia]!;
-          
+
           return Card(
             margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             elevation: 2,
@@ -313,20 +319,22 @@ class _SolicitudPageState extends State<SolicitudPage> {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: isSelected ? Colors.green[50] : Colors.transparent,
-                        border: isSelected 
-                            ? Border.all(color: Colors.green, width: 1) 
+                        color:
+                            isSelected ? Colors.green[50] : Colors.transparent,
+                        border: isSelected
+                            ? Border.all(color: Colors.green, width: 1)
                             : null,
-                        borderRadius: isSelected
-                            ? BorderRadius.circular(4)
-                            : null,
+                        borderRadius:
+                            isSelected ? BorderRadius.circular(4) : null,
                       ),
                       child: ListTile(
                         title: Text(
                           '${formatTimeString(horario['hora_inicio'])} - ${formatTimeString(horario['hora_fin'])}',
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                         ),
                         subtitle: Text(
@@ -334,8 +342,10 @@ class _SolicitudPageState extends State<SolicitudPage> {
                           style: const TextStyle(fontSize: 14),
                         ),
                         trailing: isSelected
-                            ? Icon(Icons.check_circle, color: Colors.green[700], size: 24)
-                            : const Icon(Icons.circle_outlined, color: Colors.grey, size: 24),
+                            ? Icon(Icons.check_circle,
+                                color: Colors.green[700], size: 24)
+                            : const Icon(Icons.circle_outlined,
+                                color: Colors.grey, size: 24),
                       ),
                     ),
                   );
@@ -344,7 +354,7 @@ class _SolicitudPageState extends State<SolicitudPage> {
             ),
           );
         }).toList(),
-        
+
         const SizedBox(height: 20),
       ],
     );
@@ -372,7 +382,8 @@ class _SolicitudPageState extends State<SolicitudPage> {
                   CircleAvatar(
                     radius: 50,
                     backgroundColor: Colors.green[700],
-                    child: const Icon(Icons.person, size: 50, color: Colors.white),
+                    child:
+                        const Icon(Icons.person, size: 50, color: Colors.white),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -394,7 +405,7 @@ class _SolicitudPageState extends State<SolicitudPage> {
                 ],
               ),
             ),
-            
+
             // Información personal
             Padding(
               padding: const EdgeInsets.all(20),
@@ -402,10 +413,13 @@ class _SolicitudPageState extends State<SolicitudPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildInfoSection('Información Personal', [
-                    _buildInfoRow('Edad', '${widget.coach['edad'] ?? 'N/A'} años'),
+                    _buildInfoRow(
+                        'Edad', '${widget.coach['edad'] ?? 'N/A'} años'),
                     _buildInfoRow('Sexo', widget.coach['sexo'] ?? 'N/A'),
-                    _buildInfoRow('Teléfono', widget.coach['numero_telefonico'] ?? 'N/A'),
-                    _buildInfoRow('ID Entrenador', '${widget.coach['id_entrenador'] ?? 'N/A'}'),
+                    _buildInfoRow(
+                        'Teléfono', widget.coach['numero_telefonico'] ?? 'N/A'),
+                    _buildInfoRow('ID Entrenador',
+                        '${widget.coach['id_entrenador'] ?? 'N/A'}'),
                   ]),
                   const SizedBox(height: 20),
                   _buildInfoSection('Descripción', [
@@ -416,7 +430,8 @@ class _SolicitudPageState extends State<SolicitudPage> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        widget.coach['descripcion'] ?? 'Sin descripción disponible',
+                        widget.coach['descripcion'] ??
+                            'Sin descripción disponible',
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.grey[800],
@@ -427,16 +442,16 @@ class _SolicitudPageState extends State<SolicitudPage> {
                 ],
               ),
             ),
-            
+
             // Horarios
             _buildHorariosSection(),
-            
+
             // Espacio para no quedar oculto por el botón
             const SizedBox(height: 80),
           ],
         ),
       ),
-      
+
       // Botón para solicitar
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
@@ -499,7 +514,7 @@ class _SolicitudPageState extends State<SolicitudPage> {
 
   Widget _buildInfoSection(String title, List<Widget> children) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start, 
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,

@@ -45,94 +45,99 @@ class _HorariosPageState extends State<HorariosPage> {
     // Extraer solo la hora y los minutos del formato "HH:MM:SS"
     return timeString.substring(0, 5);
   }
-Future<void> fetchHorarios() async {
-  try {
-    final response = await http.get(
-      Uri.parse('https://beta-fit-pulse.onrender.com/horarios/entrenador/${widget.userData['id_entrenador']}'),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer ${widget.token}",
-      },
-    );
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      // Verifica el formato de la respuesta
-      List<dynamic> horariosEntrenador;
-      
-      if (data is Map<String, dynamic> && data.containsKey('horarios')) {
-        // Si la respuesta es un objeto con una propiedad 'horarios'
-        horariosEntrenador = data['horarios'];
-      } else if (data is List<dynamic>) {
-        // Si la respuesta ya es una lista
-        horariosEntrenador = data;
+  Future<void> fetchHorarios() async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+            'https://beta-fit-pulse.onrender.com/horarios/entrenador/${widget.userData['id_entrenador']}'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${widget.token}",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        // Verifica el formato de la respuesta
+        List<dynamic> horariosEntrenador;
+
+        if (data is Map<String, dynamic> && data.containsKey('horarios')) {
+          // Si la respuesta es un objeto con una propiedad 'horarios'
+          horariosEntrenador = data['horarios'];
+        } else if (data is List<dynamic>) {
+          // Si la respuesta ya es una lista
+          horariosEntrenador = data;
+        } else {
+          // Para depurar, imprime la estructura de la respuesta
+          print('Formato de respuesta inesperado: ${response.body}');
+          throw Exception('Formato de respuesta no reconocido');
+        }
+
+        setState(() {
+          horarios = List<Map<String, dynamic>>.from(horariosEntrenador);
+          isLoading = false;
+        });
       } else {
-        // Para depurar, imprime la estructura de la respuesta
-        print('Formato de respuesta inesperado: ${response.body}');
-        throw Exception('Formato de respuesta no reconocido');
+        throw Exception('Error al cargar horarios');
       }
-      
-      setState(() {
-        horarios = List<Map<String, dynamic>>.from(horariosEntrenador);
-        isLoading = false;
-      });
-    } else {
-      throw Exception('Error al cargar horarios');
+    } catch (e) {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cargar horarios: $e')),
+      );
+      // Para depuración
+      print('Excepción completa: $e');
     }
-  } catch (e) {
-    setState(() => isLoading = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error al cargar horarios: $e')),
-    );
-    // Para depuración
-    print('Excepción completa: $e');
-  }
-}
-Future<void> agregarHorario() async {
-  if (startTime == null || endTime == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Por favor selecciona hora de inicio y fin')),
-    );
-    return;
   }
 
-  final horarioNuevo = {
-    "id_entrenador": widget.userData['id_entrenador'],
-    "dia_semana": selectedDay,
-    "hora_inicio": "${startTime!.hour.toString().padLeft(2, '0')}:${startTime!.minute.toString().padLeft(2, '0')}:00",
-    "hora_fin": "${endTime!.hour.toString().padLeft(2, '0')}:${endTime!.minute.toString().padLeft(2, '0')}:00",
-    "cupo": selectedCupo
-  };
-
-  try {
-    final response = await http.post(
-      Uri.parse('https://beta-fit-pulse.onrender.com/horarios'),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer ${widget.token}",
-      },
-      body: json.encode(horarioNuevo),
-    );
-
-    if (response.statusCode == 201) {
-      fetchHorarios();
-      Navigator.pop(context); // Cierra la pantalla actual
-
-      // Usa Future.delayed para esperar antes de mostrar el mensaje
-      Future.delayed(Duration(milliseconds: 300), () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Horario creado exitosamente')),
-        );
-      });
-    } else {
-      throw Exception('Error al crear horario');
+  Future<void> agregarHorario() async {
+    if (startTime == null || endTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Por favor selecciona hora de inicio y fin')),
+      );
+      return;
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error al crear horario: $e')),
-    );
+
+    final horarioNuevo = {
+      "id_entrenador": widget.userData['id_entrenador'],
+      "dia_semana": selectedDay,
+      "hora_inicio":
+          "${startTime!.hour.toString().padLeft(2, '0')}:${startTime!.minute.toString().padLeft(2, '0')}:00",
+      "hora_fin":
+          "${endTime!.hour.toString().padLeft(2, '0')}:${endTime!.minute.toString().padLeft(2, '0')}:00",
+      "cupo": selectedCupo
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://beta-fit-pulse.onrender.com/horarios'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${widget.token}",
+        },
+        body: json.encode(horarioNuevo),
+      );
+
+      if (response.statusCode == 201) {
+        fetchHorarios();
+        Navigator.pop(context); // Cierra la pantalla actual
+
+        // Usa Future.delayed para esperar antes de mostrar el mensaje
+        Future.delayed(Duration(milliseconds: 300), () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Horario creado exitosamente')),
+          );
+        });
+      } else {
+        throw Exception('Error al crear horario');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al crear horario: $e')),
+      );
+    }
   }
-}
 
   Future<void> actualizarHorario(int horarioId) async {
     if (startTime == null || endTime == null) {
@@ -145,8 +150,10 @@ Future<void> agregarHorario() async {
     final horarioActualizado = {
       "id_entrenador": widget.userData['id_entrenador'],
       "dia_semana": selectedDay,
-      "hora_inicio": "${startTime!.hour.toString().padLeft(2, '0')}:${startTime!.minute.toString().padLeft(2, '0')}:00",
-      "hora_fin": "${endTime!.hour.toString().padLeft(2, '0')}:${endTime!.minute.toString().padLeft(2, '0')}:00",
+      "hora_inicio":
+          "${startTime!.hour.toString().padLeft(2, '0')}:${startTime!.minute.toString().padLeft(2, '0')}:00",
+      "hora_fin":
+          "${endTime!.hour.toString().padLeft(2, '0')}:${endTime!.minute.toString().padLeft(2, '0')}:00",
       "cupo": selectedCupo
     };
 
@@ -206,15 +213,11 @@ Future<void> agregarHorario() async {
       selectedDay = horarioExistente['dia_semana'];
       final horaInicio = horarioExistente['hora_inicio'].toString().split(':');
       final horaFin = horarioExistente['hora_fin'].toString().split(':');
-      
+
       startTime = TimeOfDay(
-        hour: int.parse(horaInicio[0]),
-        minute: int.parse(horaInicio[1])
-      );
-      endTime = TimeOfDay(
-        hour: int.parse(horaFin[0]),
-        minute: int.parse(horaFin[1])
-      );
+          hour: int.parse(horaInicio[0]), minute: int.parse(horaInicio[1]));
+      endTime =
+          TimeOfDay(hour: int.parse(horaFin[0]), minute: int.parse(horaFin[1]));
       selectedCupo = horarioExistente['cupo'];
     } else {
       // Reset form for new entry
@@ -235,7 +238,9 @@ Future<void> agregarHorario() async {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    horarioExistente != null ? 'Editar Horario' : 'Agregar Nuevo Horario',
+                    horarioExistente != null
+                        ? 'Editar Horario'
+                        : 'Agregar Nuevo Horario',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -315,7 +320,9 @@ Future<void> agregarHorario() async {
                         agregarHorario();
                       }
                     },
-                    child: Text(horarioExistente != null ? 'Actualizar Horario' : 'Guardar Horario'),
+                    child: Text(horarioExistente != null
+                        ? 'Actualizar Horario'
+                        : 'Guardar Horario'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green[700],
                       foregroundColor: Colors.white,
@@ -346,9 +353,9 @@ Future<void> agregarHorario() async {
               itemCount: diasSemana.length,
               itemBuilder: (context, index) {
                 final dia = diasSemana[index];
-                final horariosDelDia = horarios.where(
-                  (horario) => horario['dia_semana'] == dia
-                ).toList();
+                final horariosDelDia = horarios
+                    .where((horario) => horario['dia_semana'] == dia)
+                    .toList();
 
                 return Card(
                   margin: EdgeInsets.only(bottom: 16),
@@ -373,29 +380,35 @@ Future<void> agregarHorario() async {
                             style: TextStyle(color: Colors.grey),
                           ),
                         ),
-                      ...horariosDelDia.map((horario) => ListTile(
-                        title: Text(
-                          '${formatTimeString(horario['hora_inicio'])} - ${formatTimeString(horario['hora_fin'])}',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        subtitle: Text(
-                          'Cupo: ${horario['cupo']} personas',
-                          style: TextStyle(fontSize: 14),
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () => _showHorarioModal(horarioExistente: horario),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => eliminarHorario(horario['id_horario']),
-                            ),
-                          ],
-                        ),
-                      )).toList(),
+                      ...horariosDelDia
+                          .map((horario) => ListTile(
+                                title: Text(
+                                  '${formatTimeString(horario['hora_inicio'])} - ${formatTimeString(horario['hora_fin'])}',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                subtitle: Text(
+                                  'Cupo: ${horario['cupo']} personas',
+                                  style: TextStyle(fontSize: 14),
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon:
+                                          Icon(Icons.edit, color: Colors.blue),
+                                      onPressed: () => _showHorarioModal(
+                                          horarioExistente: horario),
+                                    ),
+                                    IconButton(
+                                      icon:
+                                          Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () => eliminarHorario(
+                                          horario['id_horario']),
+                                    ),
+                                  ],
+                                ),
+                              ))
+                          .toList(),
                     ],
                   ),
                 );
