@@ -1,3 +1,5 @@
+import 'package:fitpulse_beta/screens/home_entrenador_page.dart';
+import 'package:fitpulse_beta/screens/perfil_entrenador_page.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -23,6 +25,8 @@ class _HorariosPageState extends State<HorariosPage> {
   TimeOfDay? endTime;
   String selectedDay = 'Lunes';
   int selectedCupo = 10;
+  int _selectedIndex = 1; // Default to Horarios tab
+  
   final List<String> diasSemana = [
     'Lunes',
     'Martes',
@@ -340,6 +344,80 @@ class _HorariosPageState extends State<HorariosPage> {
       },
     );
   }
+  
+  void _onBottomNavBarTap(int index) {
+    if (_selectedIndex == index) return; // Don't navigate if we're already on the page
+    
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    switch (index) {
+      case 0:
+        // Already on Home page, do nothing
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => HomeEntrenadorPage(
+              token: widget.token,
+              userData: widget.userData,
+            ),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              const begin = Offset(1.0, 0.0);
+              const end = Offset.zero;
+              const curve = Curves.easeInOut;
+              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              var offsetAnimation = animation.drive(tween);
+
+              return SlideTransition(position: offsetAnimation, child: child);
+            },
+          ),
+        );
+        break;
+      case 1:
+        // Navigate to Horarios page with transition
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => HorariosPage(
+              token: widget.token,
+              userData: widget.userData,
+            ),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              const begin = Offset(1.0, 0.0);
+              const end = Offset.zero;
+              const curve = Curves.easeInOut;
+              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              var offsetAnimation = animation.drive(tween);
+
+              return SlideTransition(position: offsetAnimation, child: child);
+            },
+          ),
+        );
+        break;
+      case 2:
+        // Navigate to Perfil page with transition
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => PerfilEntrenadorPage(
+              token: widget.token,
+              userData: widget.userData,
+            ),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              const begin = Offset(1.0, 0.0);
+              const end = Offset.zero;
+              const curve = Curves.easeInOut;
+              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              var offsetAnimation = animation.drive(tween);
+
+              return SlideTransition(position: offsetAnimation, child: child);
+            },
+          ),
+        );
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -416,6 +494,19 @@ class _HorariosPageState extends State<HorariosPage> {
                 );
               },
             ),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.green[700],
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.white54,
+        currentIndex: _selectedIndex, // Set current index
+        onTap: _onBottomNavBarTap, // Add onTap handler
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_today), label: 'Horarios'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showHorarioModal(),
         child: Icon(Icons.add),
