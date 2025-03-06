@@ -47,49 +47,51 @@ class _HorariosPageState extends State<HorariosPage> {
   }
 
   Future<void> fetchHorarios() async {
-    try {
-      final response = await http.get(
-        Uri.parse(
-            'https://beta-fit-pulse.onrender.com/horarios/entrenador/${widget.userData['id_entrenador']}'),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer ${widget.token}",
-        },
-      );
+  if (!mounted) return; // Verifica si el widget sigue montado
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        // Verifica el formato de la respuesta
-        List<dynamic> horariosEntrenador;
+  try {
+    final response = await http.get(
+      Uri.parse(
+          'https://beta-fit-pulse.onrender.com/horarios/entrenador/${widget.userData['id_entrenador']}'),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer ${widget.token}",
+      },
+    );
 
-        if (data is Map<String, dynamic> && data.containsKey('horarios')) {
-          // Si la respuesta es un objeto con una propiedad 'horarios'
-          horariosEntrenador = data['horarios'];
-        } else if (data is List<dynamic>) {
-          // Si la respuesta ya es una lista
-          horariosEntrenador = data;
-        } else {
-          // Para depurar, imprime la estructura de la respuesta
-          print('Formato de respuesta inesperado: ${response.body}');
-          throw Exception('Formato de respuesta no reconocido');
-        }
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      List<dynamic> horariosEntrenador;
 
+      if (data is Map<String, dynamic> && data.containsKey('horarios')) {
+        horariosEntrenador = data['horarios'];
+      } else if (data is List<dynamic>) {
+        horariosEntrenador = data;
+      } else {
+        print('Formato de respuesta inesperado: ${response.body}');
+        throw Exception('Formato de respuesta no reconocido');
+      }
+
+      if (mounted) {
         setState(() {
           horarios = List<Map<String, dynamic>>.from(horariosEntrenador);
           isLoading = false;
         });
-      } else {
-        throw Exception('Error al cargar horarios');
       }
-    } catch (e) {
+    } else {
+      throw Exception('Error al cargar horarios');
+    }
+  } catch (e) {
+    if (mounted) {
       setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al cargar horarios: $e')),
       );
-      // Para depuración
-      print('Excepción completa: $e');
     }
+    print('Excepción completa: $e');
   }
+}
+
 
   Future<void> agregarHorario() async {
     if (startTime == null || endTime == null) {

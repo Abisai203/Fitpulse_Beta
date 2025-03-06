@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:fitpulse_beta/screens/horarios_page.dart';
 import 'package:fitpulse_beta/screens/notificacion_page.dart';
+import 'package:fitpulse_beta/screens/perfil_entrenador_page.dart';
 
 class HomeEntrenadorPage extends StatefulWidget {
   final String token;
@@ -20,6 +21,7 @@ class HomeEntrenadorPage extends StatefulWidget {
 
 class _HomeEntrenadorPageState extends State<HomeEntrenadorPage> {
   String userName = '';
+  int _selectedIndex = 0; // Track selected bottom navigation item
 
   @override
   void initState() {
@@ -31,6 +33,63 @@ class _HomeEntrenadorPageState extends State<HomeEntrenadorPage> {
     setState(() {
       userName = widget.userData['nombre'] ?? '-----';
     });
+  }
+
+  // Method to handle bottom navigation bar taps with smooth transitions
+  void _onBottomNavBarTap(int index) {
+    if (_selectedIndex == index) return; // Don't navigate if we're already on the page
+    
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    switch (index) {
+      case 0:
+        // Already on Home page, do nothing
+        break;
+      case 1:
+        // Navigate to Horarios page with transition
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => HorariosPage(
+              token: widget.token,
+              userData: widget.userData,
+            ),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              const begin = Offset(1.0, 0.0);
+              const end = Offset.zero;
+              const curve = Curves.easeInOut;
+              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              var offsetAnimation = animation.drive(tween);
+
+              return SlideTransition(position: offsetAnimation, child: child);
+            },
+          ),
+        );
+        break;
+      case 2:
+        // Navigate to Perfil page with transition
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => PerfilEntrenadorPage(
+              token: widget.token,
+              userData: widget.userData,
+            ),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              const begin = Offset(1.0, 0.0);
+              const end = Offset.zero;
+              const curve = Curves.easeInOut;
+              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              var offsetAnimation = animation.drive(tween);
+
+              return SlideTransition(position: offsetAnimation, child: child);
+            },
+          ),
+        );
+        break;
+    }
   }
 
   @override
@@ -87,11 +146,20 @@ class _HomeEntrenadorPageState extends State<HomeEntrenadorPage> {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(
-                              builder: (context) => HorariosPage(
+                            PageRouteBuilder(
+                              pageBuilder: (context, animation, secondaryAnimation) => HorariosPage(
                                 token: widget.token,
                                 userData: widget.userData,
                               ),
+                              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                const begin = Offset(1.0, 0.0);
+                                const end = Offset.zero;
+                                const curve = Curves.easeInOut;
+                                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                                var offsetAnimation = animation.drive(tween);
+
+                                return SlideTransition(position: offsetAnimation, child: child);
+                              },
                             ),
                           );
                         },
@@ -212,6 +280,8 @@ class _HomeEntrenadorPageState extends State<HomeEntrenadorPage> {
         backgroundColor: Colors.green[700],
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white54,
+        currentIndex: _selectedIndex, // Set current index
+        onTap: _onBottomNavBarTap, // Add onTap handler
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
           BottomNavigationBarItem(

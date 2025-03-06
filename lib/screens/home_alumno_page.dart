@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:fitpulse_beta/screens/solicitud_page.dart';
 import 'package:fitpulse_beta/screens/notificacion_page.dart';
+import 'package:fitpulse_beta/screens/perfil_page.dart';
 
 class HomeAlumnoPage extends StatefulWidget {
   final String token;
@@ -19,6 +20,7 @@ class HomeAlumnoPage extends StatefulWidget {
 }
 
 class _HomeAlumnoPageState extends State<HomeAlumnoPage> {
+  
   List<dynamic> coaches = [];
   List<dynamic> filteredCoaches = [];
   TextEditingController searchController = TextEditingController();
@@ -37,6 +39,30 @@ class _HomeAlumnoPageState extends State<HomeAlumnoPage> {
     10: "Béisbol",
   };
   String deporteFavorito = '';
+  void _onBottomNavBarTap(int index) {
+    switch (index) {
+      case 0:
+        // Already on Home page, do nothing
+        break;
+      case 1:
+        // Navigate to Exercises page (you can replace with your actual exercises page)
+        // Navigator.pushReplacement(...);
+        break;
+      case 2:
+        // Navigate to Profile page
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PerfilPage(
+              token: widget.token,
+              userData: widget.userData,
+            ),
+          ),
+        );
+        break;
+    }
+  }
+ 
 
   @override
   void initState() {
@@ -313,35 +339,36 @@ void _showSearchModal() {
     searchController.clear();
     filterCoaches('');
   });
+  
 }
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+Widget build(BuildContext context) { // ajsdbajbdhasdhagdasdadasdasdfsdgdfhfhdfasdffdasfasfasffsd
+  return Scaffold(
+    backgroundColor: Colors.white,
+    appBar: AppBar(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Text('FitPulse',
-            style: TextStyle(
-                color: Colors.green[700], fontWeight: FontWeight.bold)),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.notifications, color: Colors.green[700]),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => NotificacionPage(
-                    token: widget.token,
-                    userData: widget.userData,
-                    tipo: 'alumno',
-                  ),
+      elevation: 0,
+      title: Text('FitPulse',
+          style: TextStyle(
+              color: Colors.green[700], fontWeight: FontWeight.bold)),
+      actions: [
+        IconButton(
+          icon: Icon(Icons.notifications, color: Colors.green[700]),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => NotificacionPage(
+                  token: widget.token,
+                  userData: widget.userData,
+                  tipo: 'alumno',
                 ),
-              );
-            },
-          ),
-        ],
-      ),
+              ),
+            );
+          },
+        ),
+      ],
+    ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -573,18 +600,20 @@ void _showSearchModal() {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.green[700],
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.white54,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.fitness_center), label: 'Ejercicios'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
-        ],
-      ),
-    );
-  }
+      backgroundColor: Colors.green[700],
+      selectedItemColor: Colors.white,
+      unselectedItemColor: Colors.white54,
+      currentIndex: 0, // Set current index to Home
+      onTap: _onBottomNavBarTap,
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.fitness_center), label: 'Ejercicios'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
+      ],
+    ),
+  );
+}
 
   Widget _buildCategory(String title, IconData icon) {
     return Column(
