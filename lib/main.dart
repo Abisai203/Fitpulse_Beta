@@ -1,6 +1,6 @@
 // main.dart
+import 'package:fitpulse_beta/screens/splashscreen.dart';
 import 'package:flutter/material.dart';
-import 'screens/login_page.dart';
 
 void main() {
   runApp(MyApp());
@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/login',
       routes: {
-        '/login': (context) => LoginPage(),
+        '/login': (context) => SplashScreen(),
       },
     );
   }
